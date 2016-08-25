@@ -4,6 +4,27 @@ author: "D"
 date: "Aug 23rd, 2016"
 output: html_document
 ---
+```{r include = FALSE}
+
+# chunk options are R code, i.e.:
+# include = FALSE is right; include = false is not
+# results ='hide' is ok, results =hide is not
+
+# include = FALSE
+# the chunk is evaluated, but neither the code nor its output
+# will be shown in the document
+
+# echo  = FALSE
+# chunk is evaluated , code is not shown in the output doc; chunk output is
+
+# results = 'hide'
+# chunk is evaluated, code is included in the document, output of chunk is not
+
+# messages = FALSE does not include R messages in output document
+# warnings = FALSE does not include R warnings in output document
+
+```
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -12,22 +33,112 @@ mirror = 'http://cran.us.r-project.org'
 
 ```
 
-## R Markdown
+## Intro
+In tihs file we esplore the definitions of correlation and covariance and their relationships.
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+# Covariance
+Covariance is a measure of association (as a matter of fact, one of the many measures of association) between two variabiles, i.e. how much the tow vars change together. In plain words, "association" can manifest itself in terms of one var getting greater values and the other getting greater values, or one var getting grater values and the other getting smaller values.
+Covariance tries to capture this phenomena, its strenght and its direction: measures the extent to which two variables change together.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+"Linear change" means that a change in one var is associated witha change in the second var the is proportional to the change in the first variable.
 
-```{r cars}
-summary(cars)
+Suppose you have a N-sized sample of two vars, x and y. The covariance between them is:
+
+$s_{xy} = Cov(x, y) = \frac{\sum_{i=1}^{N} (x_i - \bar{x})(y_i - \bar{y})}{N - 1}$
+
+Each addend in the numerator is the product of the deviation of each observation from the mean. The rationale is as follows: if there is an association between $x$ and $y$, i.e. as $x$ increases $y$ gets larger as well, both $(x_i - \bar{x})$ and $(y_i - \bar{y})$ will be positive or both will be negative, this way their sum will increase (in amplitude).
+
+Viceversa, if $x$ and $y$ are not associated, the sign of $(x_i - \bar{x})$ and the sign of $(y_i - \bar{y})$ sometimes will be negative, other times positive. Thus the sum of them over the several datapoints will be a small number (in amplitude).
+
+This sum is divided by $N - 1$: it's averaged by the nmumber of datapoints. Since data is declared as sampled from a population, we do not divide by the size of the sample ($N$, that would be the size of population as well), but by $N - 1$ since we used data to compute the mean $\bar{x}$ (and $\bar{y}$). So we are left with $N - 1$ degrees of freedom.
+
+# The data
+```{r}
+x = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+y_1 = x
+
+```
+Data is composed of 2 vectors of `r length(x)` datapoints each. Data is clearly artificial, but it is build only to show some features of the covariance and correlation concepts.
+
+```{r}
+library(knitr)
+kable(data.frame(x = x, y = y_1), digits = 2)
+plot(x, y_1, pch = 19, col = 'red')
+
 ```
 
-## Including Plots
+There is clearly an association between the two vars, since as x increases, y follows increasing. This intuitive observation is captured by the covariance. This can be computed using the definition:
 
-You can also embed plots, for example:
+```{r include = FALSE}
+cov_x_y_1 = sum((x - mean(x))*(y_1 - mean(y_1)))/(length(x) - 1)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+$Cov(x, y_1) = `r cov_x_y_1`$
+
+Covariance is positive, greater that zero, indicating that as $x$ increaes, $y_1$ increaeses as well.
+
+R has a function to compute the covariance, called, unsusprisingly, cov:
+```{r}
+cov_x_y_1_r = cov(x, y_1)
+cov_x_y_1_r
+
+```
+
+and the result is the same we got using the definition. By the way this tells us that the R's cov function computes sample covariances, not population covariances.
+
+Let's try to compute covariance for this second data set:
+```{r}
+x = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+y_2 = -x
+
+kable(data.frame(x = x, y = y_2), digits = 2)
+plot(x, y_2, pch = 19, col = 'red')
+
+```
+
+The plot tells us that there is in fact an association between the two vars.
+
+```{r include = FALSE}
+cov_x_y_2 = sum((x - mean(x))*(y_2 - mean(y_2)))/(length(x) - 1)
+
+```
+
+$Cov(x, y_2) = `r cov_x_y_2`$
+
+The value is not zero confirming that this association is captured by covariance. Negative value means that as $x$ increses, $y$ decreases and viceversa.
+
+Let's consider these other datasets:
+```{r}
+x_3 = x*100
+y_3 = x_3
+
+kable(data.frame(x = x_3, y = y_3), digits = 2)
+plot(x_3, y_3, pch = 19, col = 'red')
+
+```
+
+i.e. the values of the first datase multiplied by $100$. As we can see from the plot, there clearly is an association beteween $x_3$ and $y_3$, but the interesting fact is that thi sassociation is almost indentical to the first association. Let's see the plots side by side:
+```{r}
+par(mfrow = c(1, 2))
+plot(x, y_1, pch = 19, col = 'red')
+plot(x_3, y_3, pch = 19, col = 'red')
+
+```
+
+Scales are different, but apart from that, plot and associations are identical. Can we see that from correlation values?
+
+```{r}
+cov_x_y_3 = sum((x_3 - mean(x_3))*(y_3 - mean(y_3)))/(length(x_3) - 1)
+cov_x_y_3
+```
+
+The answer is NO. THe covariance value for the series $x_3$, $y_3$ is $s_{x_3 y_3} = Cov(x_3, y_3)$$=$ `r cov_x_y_3` and is different from $Cov(x, y_1)$ $=$ `r cov_x_y_1`, even if the clearly see that the graphical relationship is the same. This is called the *scale effect* on the covariance: associations that differ only in scale have different covariances values.
+
+In order to avoid this effect the covariance must be *normalized*, i.e. scaled down (or up)in order to become independent from the effects of the magnitude of the values of the data series.
+
+Covariance corrected for the scale effect is called correlation: 
+
+$r_xy = \frac{VOv(x, y)}{s_x s_y}$
+
+where $s_x$ and $s_y$ are the stadard deviations (sample standar deviations in this case) of the two series.
