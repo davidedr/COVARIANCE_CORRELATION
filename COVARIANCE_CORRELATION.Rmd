@@ -135,10 +135,57 @@ cov_x_y_3
 
 The answer is NO. THe covariance value for the series $x_3$, $y_3$ is $s_{x_3 y_3} = Cov(x_3, y_3)$$=$ `r cov_x_y_3` and is different from $Cov(x, y_1)$ $=$ `r cov_x_y_1`, even if the clearly see that the graphical relationship is the same. This is called the *scale effect* on the covariance: associations that differ only in scale have different covariances values.
 
-In order to avoid this effect the covariance must be *normalized*, i.e. scaled down (or up)in order to become independent from the effects of the magnitude of the values of the data series.
+In order to avoid this effect the covariance must be *normalized*, i.e. scaled down (or up) in order to become independent from the effects of the magnitude of the values of the data series.
 
-Covariance corrected for the scale effect is called correlation: 
+# Correlation
+Covariance corrected for the scale effect is called ***correlation***: 
 
-$r_xy = \frac{VOv(x, y)}{s_x s_y}$
+$r_{x y} = \frac{Cov(x, y)}{s_x s_y}$
 
-where $s_x$ and $s_y$ are the stadard deviations (sample standar deviations in this case) of the two series.
+where $s_x$ and $s_y$ are the stadard deviations (sample standard deviations in this case) of the two series.
+For example, the covariance of series $x$ and $y_1$ is:
+```{r}
+s_x = sqrt(sum((x - mean(x))^2)/(length(x) - 1))
+s_y_1 = sqrt(sum((y_1 - mean(y_1))^2)/(length(y_1) - 1))
+cov_x_y_1 = sum((x - mean(x))*(y_1 - mean(y_1)))/(length(y_1) - 1) 
+r_x_y_1 = cov_x_y_1/(s_x*s_y_1)
+
+```
+
+(Here again we use $N - 1$ to compute statistics since by hypothesis provided data is a *sample* and not the entire population).
+
+So correlation of series $x$ and $y_1$ is: $r_{x y_1}=$ `r r_x_y_1`. What about the correlation of series $x_3$ and $y_3$? Let's see:
+```{r}
+s_x_3 = sqrt(sum((x_3 - mean(x_3))^2)/(length(x_3) - 1))
+s_y_3 = sqrt(sum((y_3 - mean(y_3))^2)/(length(y_3) - 1))
+cov_x_y_3 = sum((x_3 - mean(x_3))*(y_3 - mean(y_3)))/(length(y_3) - 1) 
+r_x_y_3 = cov_x_y_3/(s_x_3*s_y_3)
+
+```
+
+We get: $r_{x_3 y_3}=$ `r r_x_y_3`, equal to $r_{x y_1}$. That is, correlation is immune from scale effest, telling ud the association between $x$ and $y_1$ is the very same association between $x_3$ and $y_3$ apart from scale. It's very nice to have a metric of the degree of association between variables that allows us to perform comparisons (i.e. getting what's common and what is different).
+
+R provides a built in function to compute (sample) correlation between varaibles:
+```{r}
+r_x_y_3_R = cor(x_3, y_3)
+
+```
+
+that provides, of course, the very same value: $r_{x_3 y_3}=$ `r r_x_y_3_R`.
+
+So let's summarize all that, providing the plots, from which we get a grasp of the (possible) assocition between the data series and how this association, if any, is summarized by covariance and correlation.
+
+```{r}
+par(mfrow = c(1, 4))
+plot(x, y_1, pch = 19, col = "red")
+plot(x, y_2, pch = 19, col = "red")
+plot(x, y_3, pch = 19, col = "red")
+y_4 = -y_3
+plot(x, y_4, pch = 19, col = "red")
+
+df = data.frame(Series = c(1, 2, 3, 4), Covariance=c(cov(x, y_1), cov(x, y_2), cov(x_3, y_3), cov(x_3, y_4)), Corrrelation=c(cor(x, y_1), cor(x, y_2), cor(x_3, y_3), cor(x_3, y_4)))
+
+kable(df, digits = 2)
+```
+
+Second two plots come from first two series multiplying them by $100$; corariances gets bigger, correlations stay the same.
